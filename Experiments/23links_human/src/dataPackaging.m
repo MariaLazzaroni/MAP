@@ -8,13 +8,13 @@ function [ dataPacked ] = dataPackaging(model, sensors, suit, forceplate, ddq, r
 %    - var : variance of sensor.
 
 data      = struct;
-data.acc  = struct;
+data.acc  = struct; %
 % data.gyro = struct;
 data.ddq  = struct;       
 data.fext = struct;
 
 %% FROM SUIT
-% SENSOR: <ACCELEROMETER>
+% SENSOR: <ACCELEROMETER> %
 % type
 data.acc.type = iDynTree.ACCELEROMETER_SENSOR;
 % id
@@ -158,8 +158,8 @@ for i = 1 : nOfSensor.acc
 %     dataPacked(i + nOfSensor.acc).meas  = data.gyro.meas{i};
 %     dataPacked(i + nOfSensor.acc).var   = data.gyro.var;
 end
-% indx = i + nOfSensor.acc;
-indx = i;
+indx = nOfSensor.acc;
+% indx = i;
 %--
 for i = 1 : nOfSensor.DOFacc
     dataPacked(i + (indx)).type         = data.ddq.type;
@@ -167,7 +167,18 @@ for i = 1 : nOfSensor.DOFacc
     dataPacked(i + (indx)).meas         = data.ddq.meas{i};
     dataPacked(i + (indx)).var          = data.ddq.var;
 end
-indx = indx + nOfSensor.DOFacc;
+ indx = indx + nOfSensor.DOFacc;
+
+
+% for i = 1 : nOfSensor.DOFacc
+%     dataPacked(i ).type         = data.ddq.type;
+%     dataPacked(i ).id           = data.ddq.id{i};
+%     dataPacked(i ).meas         = data.ddq.meas{i};
+%     dataPacked(i ).var          = data.ddq.var;
+% end
+% indx = indx + nOfSensor.DOFacc;
+% indx = i; %
+
 %--
 for i = 1 : nOfSensor.fext
     dataPacked(i + (indx)).type         = data.fext.type;
