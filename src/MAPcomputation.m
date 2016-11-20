@@ -1,4 +1,4 @@
-function [mu_dgiveny, Sigma_dgiveny] = MAPcomputation(berdy, state, y, priors, varargin)
+function [mu_dgiveny, Sigma_dgiveny_specific] = MAPcomputation(berdy, state, y, priors, varargin)
 % MAPCOMPUTATION solves the inverse dynamics problem with a 
 % maximum-a-posteriori estimation by using the Newton-Euler algorithm and 
 % redundant sensor measurements as originally described in the paper 
@@ -115,6 +115,11 @@ dq = iDynTree.JointDOFsDoubleArray(berdy.model());
 
 % modelError = zeros(berdy.getNrOfDynamicEquations, samples);
 % measError  = zeros(size(y,1), samples);
+[ indexAnkle_sx, ~ ] = rangeOfDynamicVariable( berdy, iDynTree.DOF_TORQUE, 'jLeftAnkle_roty');
+[ indexHip_sx, ~ ] = rangeOfDynamicVariable( berdy, iDynTree.DOF_TORQUE, 'jLeftHip_roty');
+[ indexAnkle_dx, ~ ] = rangeOfDynamicVariable( berdy, iDynTree.DOF_TORQUE, 'jRightAnkle_roty');
+[ indexHip_dx, ~ ] = rangeOfDynamicVariable( berdy, iDynTree.DOF_TORQUE, 'jRightHip_roty');
+Sigma_dgiveny_specific = zeros(samples,4);
 
 for i = 1 : samples
     
@@ -140,9 +145,20 @@ for i = 1 : samples
     SigmaBarD_inv = D' * SigmaD_inv * D + Sigmad_inv;
     muBarD        = SigmaBarD_inv \ (Sigmad_inv * mud - D' * SigmaD_inv * b_D);
 
-    Sigma_dgiveny{i} = zeros(size(Sigmay_inv)) ; % vettore senza senso
-    mu_dgiveny(:,i)      = (SigmaBarD_inv + Y' * Sigmay_inv * Y)\(Y' * Sigmay_inv * (y(:,i) - b_Y) + SigmaBarD_inv * muBarD);
+%     Sigma_dgiveny{i} = zeros(size(Sigmay_inv)) ; % vettore senza senso
+%     mu_dgiveny(:,i)      = (SigmaBarD_inv + Y' * Sigmay_inv * Y)\(Y' * Sigmay_inv * (y(:,i) - b_Y) + SigmaBarD_inv * muBarD);
     
+    Sigma_dgiveny     = inv(SigmaBarD_inv + Y' * Sigmay_inv * Y);
+    mu_dgiveny(:,i)      = Sigma_dgiveny * (Y' * Sigmay_inv * (y(:,i) - b_Y) ...
+                          + SigmaBarD_inv * muBarD);
+                      
+    Sigma_dgiveny_Ankle_sx = Sigma_dgiveny(indexAnkle_sx,indexAnkle_sx);
+    Sigma_dgiveny_Hip_sx = Sigma_dgiveny(indexHip_sx,indexHip_sx);
+    
+    Sigma_dgiveny_Ankle_dx = Sigma_dgiveny(indexAnkle_dx,indexAnkle_dx);
+    Sigma_dgiveny_Hip_dx = Sigma_dgiveny(indexHip_dx,indexHip_dx);
+    
+    Sigma_dgiveny_specific(i,:) = [Sigma_dgiveny_Ankle_sx, Sigma_dgiveny_Hip_sx, Sigma_dgiveny_Ankle_dx, Sigma_dgiveny_Hip_dx];
 %     %test for checking errors
 %     modelError(:,i) = (D * mu_dgiveny(:,i)) + b_D;
 %     measError(:,i)  = (Y * mu_dgiveny(:,i)) + b_Y - y(:,i);

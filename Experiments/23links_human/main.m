@@ -95,7 +95,7 @@ bucket.trcFile = sprintf('data/Meri-0%d%d.trc',trialID0, trialID);
 humanModel.filename = bucket.filenameURDF;
 humanModelLoader = iDynTree.ModelLoader();
 if ~humanModelLoader.loadReducedModelFromFile(humanModel.filename, ...
-        cell2iDynTreeStringVector(selectedJoints));
+        cell2iDynTreeStringVector(selectedJoints))
 % here the model loads the same order of selectedJoints.
 fprintf('Something wrong with the model loading.')
 end
@@ -196,16 +196,14 @@ temp = struct;
 temp.type = iDynTree.NET_EXT_WRENCH_SENSOR;
 temp.id = 'LeftHand';
 sensorsToBeRemoved = [sensorsToBeRemoved; temp];
-%         temp = struct;
-%         temp.type = iDynTree.NET_EXT_WRENCH_SENSOR;
-%         temp.id = 'RightHand';
-%         sensorsToBeRemoved = [sensorsToBeRemoved; temp];
+temp = struct;
+temp.type = iDynTree.NET_EXT_WRENCH_SENSOR;
+temp.id = 'RightHand';
+sensorsToBeRemoved = [sensorsToBeRemoved; temp];
 
-% profile on
-[mu_dgiveny, Sigma_dgiveny] = MAPcomputation(berdy, human_state, y, priors, 'SENSORS_TO_REMOVE', sensorsToBeRemoved);
-% [mu_dgiveny, Sigma_dgiveny] = MAPcomputation(berdy, human_state, y, priors);
-% profile viewer
-% profile off
+[mu_dgiveny_3sens, Sigma_specific_3sens] = MAPcomputation(berdy, human_state, y, priors, 'SENSORS_TO_REMOVE', sensorsToBeRemoved);
+% [mu_dgiveny_ALLsens, Sigma_specific_ALLsens] = MAPcomputation(berdy, human_state, y, priors);
 
-bowingPlot
-% squatPlot
+%bowingPlot
+%squatPlot
+addingSensorsPlot
